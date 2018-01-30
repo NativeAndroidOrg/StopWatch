@@ -14,10 +14,23 @@ public class StopWatch extends Activity {
 
     private boolean running;
 
+    // Slice 2 : When the app goes to background, we want to stop the stopwatch and when the app comes to foreground we want the stopwatch to resume
+    private boolean wasRunning;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stop_watch);
+
+        // Slice 1 : If the device orientation is changed then the state is lost because activity is destroyed
+        // Save the state of activity before the activity is destroyed
+        // This saved state will be used in the onCreate method when the activity is recreated
+        if (null != savedInstanceState) {
+            seconds = savedInstanceState.getInt("seconds");
+            running = savedInstanceState.getBoolean("running");
+            // Slice 2 : When the app goes to background, we want to stop the stopwatch and when the app comes to foreground we want the stopwatch to resume
+            wasRunning = savedInstanceState.getBoolean("wasRunning");
+        }
 
         runTimer();
     }
@@ -53,5 +66,35 @@ public class StopWatch extends Activity {
                 handler.postDelayed(this,1000); //Run this code after every 100 milliseconds
             }
         });
+    }
+
+    // Slice 1 : If the device orientation is changed then the state is lost because activity is destroyed
+    // Save the state of activity before the activity is destroyed
+    // This saved state will be used in the onCreate method when the activity is recreated
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putInt("seconds", seconds);
+        savedInstanceState.putBoolean("running", running);
+        // Slice 2 : When the app goes to background, we want to stop the stopwatch and when the app comes to foreground we want the stopwatch to resume
+        savedInstanceState.putBoolean("wasRunning", wasRunning);
+    }
+
+    // Slice 2 : When the app goes to background, we want to stop the stopwatch and when the app comes to foreground we want the stopwatch to resume
+    // onStop, is a lifecycle method of activity. It will get called when the activity stops being visible to the user
+    @Override
+    protected void onStop() {
+        super.onStop();
+        wasRunning = running;
+        running = false;
+    }
+
+    // Slice 2 : When the app goes to background, we want to stop the stopwatch and when the app comes to foreground we want the stopwatch to resume
+    // onStart, is a lifecycle method of activity. It will get called when the activity is about the become visible to the user
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (wasRunning) {
+            running = true;
+        }
     }
 }
